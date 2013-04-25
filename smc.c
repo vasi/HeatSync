@@ -453,15 +453,19 @@ kern_return_t SMCWriteSimple(UInt32Char_t key,char *wvalue,io_connect_t conn)
 		return result;
 }
 
+float sp78(SMCVal_t *v) {
+	int ret = v->bytes[0] * 256 + v->bytes[1];
+	return (ret >> 2) / 64.0;
+}
 
-int main_deac(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     int c;
     extern char   *optarg;
     extern int    optind, optopt, opterr;
 
     kern_return_t result;
-    int           op = OP_NONE;
+    int           op = OP_CUSTOM;
     UInt32Char_t  key = "\0";
     SMCVal_t      val;
 
@@ -546,6 +550,12 @@ int main_deac(int argc, char *argv[])
         if (result != kIOReturnSuccess)
             printf("Error: SMCPrintFans() = %08x\n", result);
         break;
+	case OP_CUSTOM:
+		SMCReadKey("F0Ac", &val);
+		printf("Fan: %d\n", (int)_strtof(val.bytes, val.dataSize, 2));
+		SMCReadKey("TC0D", &val);
+		printf("CPU: %.1f\n", sp78(&val));
+		break;
     case OP_WRITE:
         if (strlen(key) > 0)
         {
